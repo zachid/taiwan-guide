@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מדריך טייוואן</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Assistant only — all weights -->
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+
+    /* ═══════════════════════════════════════════
+       DESIGN TOKENS — Stoic Light Mode
+    ═══════════════════════════════════════════ */
+    :root {
+      /* Backgrounds */
+      --bg:        #F5F3F0;   /* warm page bg */
+      --surface:   #FFFFFF;
+      --surface-2: #F9F8F6;   /* slightly tinted cards */
+      --hover:     #F2F0ED;
+
+      /* Separators */
+      --sep:       rgba(0,0,0,0.07);
+      --sep-md:    rgba(0,0,0,0.12);
+
+      /* Text scale */
+      --t1:  #1C1A17;   /* headline */
+      --t2:  #4A4540;   /* body */
+      --t3:  #8C8580;   /* secondary / caption */
+      --t4:  #BCB8B3;   /* placeholder / ghost */
+
+      /* Accent — warm amber */
+      --acc:       #B8892A;
+      --acc-soft:  rgba(184,137,42,0.10);
+      --acc-line:  rgba(184,137,42,0.28);
+      --acc-text:  #9A7020;
+
+      /* Status */
+      --red-s:   rgba(160,64,48,0.10); --red-t:   #9A3A28;
+      --green-s: rgba(58,106,68,0.10); --green-t: #376040;
+      --blue-s:  rgba(42,82,128,0.10); --blue-t:  #2A527A;
+
+      /* Radius */
+      --r-sm: 6px;
+      --r:    10px;
+      --r-lg: 16px;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESET + BASE
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Assistant', 'Arial Hebrew', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--t1);
+      direction: rtl;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════ */
+    .hero {
+      background: var(--surface);
+      padding: 52px 28px 42px;
+      text-align: center;
+      border-bottom: 1px solid var(--sep);
+      position: relative;
+      overflow: hidden;
+    }
+    /* top accent line */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; left: 0;
+      height: 3px;
+      background: var(--acc);
+    }
+
+    .hero-flag { font-size: 2.4rem; display: block; margin-bottom: 16px; }
+
+    /* HEADLINE — Assistant ExtraBold 800 */
+    .hero-title {
+      font-weight: 800;
+      font-size: clamp(2rem, 6vw, 3rem);
+      color: var(--t1);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .hero-title .accent { color: var(--acc); }
+
+    /* HERO SUB — Assistant ExtraLight 200, wide tracking */
+    .hero-sub {
+      font-weight: 200;
+      font-size: 0.72rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-top: 12px;
+    }
+
+    .hero-pills {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .hero-pill {
+      background: var(--bg);
+      border: 1px solid var(--sep-md);
+      padding: 5px 14px;
+      border-radius: 20px;
+      /* Assistant Light 300 */
+      font-weight: 300;
+      font-size: 0.8rem;
+      color: var(--t2);
+    }
+
+    /* ═══════════════════════════════════════════
+       TAB BAR
+    ═══════════════════════════════════════════ */
+    .tab-bar-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--sep);
+    }
+    .tab-bar {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 6px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 13px 14px;
+      /* Assistant Regular 400 */
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400;
+      font-size: 0.83rem;
+      color: var(--t3);
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.16s, border-color 0.16s;
+    }
+    .tab-btn:hover { color: var(--t2); }
+    /* Active tab — Assistant SemiBold 600 */
+    .tab-btn.active {
+      color: var(--acc-text);
+      border-bottom-color: var(--acc);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════ */
+    .content-area {
+      padding: 32px 20px 100px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp 0.2s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION HEADER
+    ═══════════════════════════════════════════ */
+    .sh { margin-bottom: 24px; }
+
+    /* Eyebrow — Assistant ExtraLight 200, caps, tracked */
+    .sh-eyebrow {
+      font-weight: 200;
+      font-size: 0.68rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--acc);
+      margin-bottom: 5px;
+    }
+
+    /* Section title — Assistant Bold 700 */
+    .sh-title {
+      font-weight: 700;
+      font-size: clamp(1.45rem, 4vw, 1.9rem);
+      color: var(--t1);
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+    }
+
+    /* Desc — Assistant Light 300 */
+    .sh-desc {
+      font-weight: 300;
+      font-size: 0.87rem;
+      color: var(--t3);
+      margin-top: 7px;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════
+       SEARCH
+    ═══════════════════════════════════════════ */
+    .search-wrap { position: relative; margin-bottom: 20px; }
+    .search-input {
+      width: 100%;
+      padding: 11px 18px 11px 42px;
+      border: 1px solid var(--sep-md);
+      border-radius: var(--r);
+      /* Assistant Regular 400 */
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400;
+      font-size: 0.87rem;
+      direction: rtl;
+      background: var(--surface);
+      color: var(--t1);
+      transition: border-color 0.16s, box-shadow 0.16s;
+    }
+    .search-input::placeholder { color: var(--t4); }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--acc-line);
+      box-shadow: 0 0 0 3px var(--acc-soft);
+    }
+    .search-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--t4); font-size: 0.9rem; pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       LIST GROUP — Stoic-style rows
+    ═══════════════════════════════════════════ */
+    .list-group {
+      background: var(--surface);
+      border: 1px solid var(--sep);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .list-row {
+      display: flex;
+      gap: 13px;
+      align-items: flex-start;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--sep);
+      transition: background 0.12s;
+    }
+    .list-row:last-child { border-bottom: none; }
+    @media (hover: hover) { .list-row:hover { background: var(--hover); } }
+
+    /* Icon well */
+    .row-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--r-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--sep);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .row-content { flex: 1; min-width: 0; }
+
+    /* Row title — Assistant SemiBold 600 */
+    .row-title {
+      font-weight: 600;
+      font-size: 0.93rem;
+      color: var(--t1);
+      margin-bottom: 2px;
+      line-height: 1.35;
+    }
+
+    /* Row caption — Assistant Light 300, accent color */
+    .row-caption {
+      font-weight: 300;
+      font-size: 0.75rem;
+      color: var(--acc);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    /* Row body — Assistant Regular 400 */
+    .row-body {
+      font-weight: 400;
+      font-size: 0.84rem;
+      color: var(--t2);
+      line-height: 1.55;
+    }
+
+    .row-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+
+    /* ═══════════════════════════════════════════
+       CHIPS
+    ═══════════════════════════════════════════ */
+    .chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 9px; border-radius: 20px;
+      /* Assistant Medium 500 */
+      font-weight: 500;
+      font-size: 0.71rem;
+      letter-spacing: 0.02em;
+    }
+    .chip-area  { background: var(--blue-s);  color: var(--blue-t);  border: 1px solid rgba(42,82,128,0.18); }
+    .chip-gold  { background: var(--acc-soft); color: var(--acc-text);border: 1px solid var(--acc-line); }
+    .chip-addr  { background: var(--surface-2);color: var(--t3);      border: 1px solid var(--sep); }
+    .chip-new   { background: var(--green-s);  color: var(--green-t); border: 1px solid rgba(58,106,68,0.2); }
+
+    /* ═══════════════════════════════════════════
+       FOOD GRID
+    ═══════════════════════════════════════════ */
+    .food-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 10px;
+    }
+    .food-card {
+      background: var(--surface);
+      border: 1px solid var(--sep);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: box-shadow 0.14s, transform 0.14s;
+    }
+    .food-card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+    .food-thumb {
+      height: 92px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.6rem;
+    }
+    .food-body { padding: 10px 12px 13px; }
+
+    /* Food name — Assistant SemiBold 600 */
+    .food-name { font-weight: 600; font-size: 0.84rem; color: var(--t1); margin-bottom: 2px; }
+
+    /* Food where — Assistant Light 300 */
+    .food-where { font-weight: 300; font-size: 0.72rem; color: var(--t4); margin-bottom: 5px; }
+
+    /* Food desc — Assistant Regular 400 */
+    .food-desc { font-weight: 400; font-size: 0.79rem; color: var(--t2); line-height: 1.5; }
+
+    /* Food thumb backgrounds — light warm tones */
+    .g-noodle  { background: #FDF0E8; }
+    .g-sweet   { background: #F5EEFF; }
+    .g-bbq     { background: #FDEEE8; }
+    .g-drink   { background: #E8F5EE; }
+    .g-rice    { background: #FDF7E0; }
+    .g-bao     { background: #FBF0D8; }
+    .g-street  { background: #E8EEF8; }
+    .g-dark    { background: #F0F0F0; }
+    .g-warm    { background: #FDF2E8; }
+    .g-gold    { background: #FDF5DC; }
+
+    /* ═══════════════════════════════════════════
+       BLOCK (areas, itinerary)
+    ═══════════════════════════════════════════ */
+    .block {
+      background: var(--surface);
+      border: 1px solid var(--sep);
+      border-radius: var(--r-lg);
+      padding: 20px 22px 18px;
+      margin-bottom: 10px;
+    }
+
+    /* Block title — Assistant Bold 700 */
+    .block-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--t1);
+      margin-bottom: 13px;
+      display: flex; align-items: center; gap: 7px;
+    }
+
+    .block ul, .block ol { padding-right: 20px; }
+
+    /* Block list item — Assistant Regular 400 */
+    .block li {
+      font-weight: 400;
+      font-size: 0.85rem;
+      color: var(--t2);
+      margin-bottom: 6px;
+      line-height: 1.55;
+    }
+    .block li strong { font-weight: 600; color: var(--t1); }
+    .block-accent { border-right: 3px solid var(--acc); }
+
+    /* ═══════════════════════════════════════════
+       TABLE
+    ═══════════════════════════════════════════ */
+    .stoic-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface);
+      border-radius: var(--r);
+      overflow: hidden;
+      border: 1px solid var(--sep);
+    }
+    .stoic-table th {
+      background: var(--surface-2);
+      color: var(--acc-text);
+      padding: 10px 16px;
+      /* Assistant ExtraLight 200 caps */
+      font-weight: 200;
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-align: right;
+      border-bottom: 1px solid var(--sep-md);
+    }
+    .stoic-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--sep);
+      /* Assistant Regular 400 */
+      font-weight: 400;
+      font-size: 0.85rem;
+      color: var(--t2);
+      vertical-align: top;
+    }
+    .stoic-table tr:last-child td { border-bottom: none; }
+    .stoic-table td:first-child {
+      /* Assistant SemiBold 600 */
+      font-weight: 600;
+      color: var(--t3);
+      white-space: nowrap;
+      width: 120px;
+    }
+
+    /* ═══════════════════════════════════════════
+       RANK LIST
+    ═══════════════════════════════════════════ */
+    .rank-list {
+      background: var(--surface);
+      border: 1px solid var(--sep);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .rank-row {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--sep);
+      transition: background 0.12s;
+    }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-row:hover { background: var(--hover); }
+
+    /* Rank number — Assistant ExtraBold 800 */
+    .rank-n {
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--t4);
+      min-width: 36px;
+      line-height: 1;
+      padding-top: 3px;
+      text-align: center;
+    }
+    .rank-n.gold { color: var(--acc); }
+
+    /* Rank food — Assistant Bold 700 */
+    .rank-food { font-weight: 700; font-size: 0.92rem; color: var(--t1); margin-bottom: 2px; }
+
+    /* Rank place — Assistant Light 300 */
+    .rank-place { font-weight: 300; font-size: 0.75rem; color: var(--acc); margin-bottom: 4px; letter-spacing: 0.05em; }
+
+    /* Rank note — Assistant Regular 400 */
+    .rank-note { font-weight: 400; font-size: 0.83rem; color: var(--t2); }
+
+    /* ═══════════════════════════════════════════
+       INSTAGRAM
+    ═══════════════════════════════════════════ */
+    .ig-list {
+      background: var(--surface);
+      border: 1px solid var(--sep);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .ig-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--sep);
+      transition: background 0.12s;
+    }
+    .ig-row:last-child { border-bottom: none; }
+    .ig-row:hover { background: var(--hover); }
+    .ig-emo { font-size: 1.3rem; min-width: 28px; text-align: center; }
+
+    /* IG handle — Assistant SemiBold 600 */
+    .ig-row a {
+      font-weight: 600; font-size: 0.9rem; color: var(--acc-text);
+      text-decoration: none;
+    }
+    .ig-row a:hover { text-decoration: underline; }
+
+    /* IG note — Assistant Light 300 */
+    .ig-note { font-weight: 300; font-size: 0.78rem; color: var(--t3); margin-top: 2px; }
+
+    /* ═══════════════════════════════════════════
+       MAP
+    ═══════════════════════════════════════════ */
+    #map-panel {
+      height: calc(100vh - 107px);
+      display: none; flex-direction: column;
+    }
+    #map-panel.active { display: flex; }
+
+    .map-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--sep);
+      padding: 10px 16px;
+      display: flex; gap: 7px; flex-wrap: wrap; align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Map label — Assistant ExtraLight 200 */
+    .map-label {
+      font-weight: 200;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-left: 6px;
+    }
+
+    /* Map filter btn — Assistant Medium 500 */
+    .map-btn {
+      border: 1px solid var(--sep-md);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 500;
+      font-size: 0.78rem;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--t2);
+      transition: all 0.14s;
+    }
+    .map-btn:hover { background: var(--hover); }
+    .map-btn.active {
+      background: var(--acc-soft);
+      color: var(--acc-text);
+      border-color: var(--acc-line);
+    }
+
+    #leaflet-map { flex: 1; width: 100%; min-height: 400px; }
+
+    /* Map popups */
+    .leaflet-popup-content-wrapper {
+      background: var(--surface) !important;
+      border: 1px solid var(--sep-md) !important;
+      border-radius: var(--r) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+      color: var(--t1) !important;
+    }
+    .leaflet-popup-tip { background: var(--surface) !important; }
+    .leaflet-popup-content { direction: rtl; text-align: right; }
+
+    /* Pop name — Assistant SemiBold 600 */
+    .pop-name { font-weight: 600; font-size: 0.9rem; color: var(--t1); margin-bottom: 4px; }
+    .pop-chip {
+      display: inline-block; font-size: 0.68rem; padding: 2px 8px;
+      border-radius: 12px; margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .p-rest { background: var(--red-s);   color: var(--red-t); }
+    .p-cafe { background: var(--acc-soft); color: var(--acc-text); }
+    .p-attr { background: var(--blue-s);  color: var(--blue-t); }
+    .p-area { background: var(--green-s); color: var(--green-t); }
+    .pop-note { font-weight: 400; font-size: 0.8rem; color: var(--t2); }
+    .pop-addr { font-weight: 300; font-size: 0.73rem; color: var(--t3); margin-top: 3px; }
+
+    /* ═══════════════════════════════════════════
+       UTILITIES
+    ═══════════════════════════════════════════ */
+    .hr { height: 1px; background: var(--sep); margin: 26px 0; }
+
+    .no-results {
+      text-align: center;
+      padding: 52px 24px;
+      font-weight: 300;
+      font-size: 0.88rem;
+      color: var(--t4);
+    }
+
+    /* Footer — Assistant ExtraLight 200 */
+    .footer {
+      text-align: center;
+      padding: 28px;
+      font-weight: 200;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--t4);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .hero { padding: 40px 16px 32px; }
+      .content-area { padding: 22px 14px 90px; }
+      .food-grid { grid-template-columns: repeat(2, 1fr); }
+      .map-bar { gap: 5px; padding: 8px 12px; }
+      .rank-n { font-size: 1.2rem; min-width: 28px; }
+    }
+
+    /* ═══════════════════════════════════════════
+       CITY SELECTOR BAR
+    ═══════════════════════════════════════════ */
+    .city-bar-wrap {
+      background: var(--surface);
+      border-bottom: 1px solid var(--sep);
+      padding: 10px 0;
+    }
+    .city-bar {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 20px;
+      max-width: 860px;
+      margin: 0 auto;
+      align-items: center;
+    }
+    .city-bar::-webkit-scrollbar { display: none; }
+    .city-bar-label {
+      font-weight: 200;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--t4);
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+    .city-chip {
+      flex-shrink: 0;
+      border: 1px solid var(--sep-md);
+      background: var(--bg);
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--t2);
+      cursor: pointer;
+      transition: all 0.14s;
+      white-space: nowrap;
+    }
+    .city-chip:hover { border-color: var(--acc-line); color: var(--acc-text); }
+    .city-chip.active {
+      background: var(--acc);
+      border-color: var(--acc);
+      color: #fff;
+      font-weight: 600;
+    }
+    .city-empty-state {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--t3);
+    }
+    .city-empty-state .emo { font-size: 2.5rem; margin-bottom: 14px; display: block; }
+    .city-empty-state .ttl { font-weight: 600; font-size: 1rem; color: var(--t2); margin-bottom: 6px; }
+    .city-empty-state .sub { font-weight: 300; font-size: 0.84rem; line-height: 1.6; }
+    .city-empty-state .add-btn-inline {
+      display: inline-block;
+      margin-top: 18px;
+      background: var(--acc);
+      color: #fff;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 9px 20px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════════════
+       ADD PLACE — FAB + MODAL
+    ═══════════════════════════════════════════ */
+    .fab {
+      position: fixed;
+      bottom: 28px;
+      left: 24px;
+      z-index: 300;
+      background: var(--acc);
+      color: #fff;
+      border: none;
+      border-radius: 28px;
+      padding: 13px 20px;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(184,137,42,0.40);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(184,137,42,0.50); }
+    .fab-icon { font-size: 1.1rem; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.38);
+      z-index: 400;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px 24px 40px;
+      animation: sheetUp 0.26s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--sep-md);
+      border-radius: 2px;
+      margin: 0 auto 22px;
+    }
+    .modal-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--t1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-weight: 500;
+      font-size: 0.78rem;
+      color: var(--t2);
+      margin-bottom: 5px;
+      letter-spacing: 0.04em;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--sep-md);
+      border-radius: var(--r);
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400;
+      font-size: 0.87rem;
+      color: var(--t1);
+      background: var(--surface);
+      direction: rtl;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--t4); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--acc-line);
+      box-shadow: 0 0 0 3px var(--acc-soft);
+    }
+    .form-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-checkbox-item {
+      display: flex; align-items: center; gap: 5px;
+      font-weight: 300; font-size: 0.82rem; color: var(--t2);
+      cursor: pointer;
+    }
+    .form-checkbox-item input { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; }
+    .form-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--acc);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-family: 'Assistant', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+    .form-submit:hover { opacity: 0.9; }
+    .form-cancel {
+      width: 100%;
+      padding: 11px;
+      background: none;
+      color: var(--t3);
+      border: none;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400;
+      font-size: 0.87rem;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .user-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(58,106,68,0.10);
+      color: #376040;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-weight: 500;
+      font-size: 0.72rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<div class="hero">
+  <span class="hero-flag">🇹🇼</span>
+  <h1 class="hero-title">מדריך <span class="accent">טייוואן</span></h1>
+  <p class="hero-sub">מסעדות · קפה ותה · מאכלים · אזורים · אטרקציות</p>
+  <div class="hero-pills">
+    <span class="hero-pill">🌟 מישלן</span>
+    <span class="hero-pill">☕ בתי קפה</span>
+    <span class="hero-pill">🍜 מסעדות</span>
+    <span class="hero-pill">🗺️ מפה אינטראקטיבית</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CITY SELECTOR
+══════════════════════════════════════════ -->
+<div class="city-bar-wrap">
+  <div class="city-bar">
+    <span class="city-bar-label">עיר:</span>
+    <button class="city-chip active" data-city="all">🗾 כל טייוואן</button>
+    <button class="city-chip" data-city="טאיפיי">🏙️ טאיפיי</button>
+    <button class="city-chip" data-city="טאינאן">🏯 טאינאן</button>
+    <button class="city-chip" data-city="טאיגיונג">🌿 טאיגיונג</button>
+    <button class="city-chip" data-city="גיופן">⛰️ גיופן</button>
+    <button class="city-chip" data-city="הואלין">🏔️ הואלין</button>
+    <button class="city-chip" data-city="טאיטונג">🌊 טאיטונג</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB BAR
+══════════════════════════════════════════ -->
+<div class="tab-bar-wrap">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="restaurants">🍜 מסעדות</button>
+    <button class="tab-btn" data-tab="cafes">☕ קפה ותה</button>
+    <button class="tab-btn" data-tab="food">🥢 מאכלים</button>
+    <button class="tab-btn" data-tab="areas">🏙️ אזורים</button>
+    <button class="tab-btn" data-tab="places">📍 מקומות</button>
+    <button class="tab-btn" data-tab="attractions">🎡 אטרקציות</button>
+    <button class="tab-btn" data-tab="tips">💡 לו״ז</button>
+    <button class="tab-btn" data-tab="top10">🏆 TOP 10</button>
+    <button class="tab-btn" data-tab="secondplate">🍽️ Worth a 2nd Plate</button>
+    <button class="tab-btn" data-tab="map">🗺️ מפה</button>
+    <button class="tab-btn" data-tab="instagram">📱 Instagram</button>
+  </div>
+</div>
+
+<!-- MAP — full height, outside content area -->
+<div id="map-panel" class="tab-panel">
+  <div class="map-bar">
+    <span class="map-label">סנן</span>
+    <button class="map-btn active" onclick="filterMap('all',this)">הכל</button>
+    <button class="map-btn" onclick="filterMap('rest',this)">🍜 מסעדות</button>
+    <button class="map-btn" onclick="filterMap('cafe',this)">☕ קפה</button>
+    <button class="map-btn" onclick="filterMap('attr',this)">🎡 אטרקציות</button>
+    <button class="map-btn" onclick="filterMap('area',this)">🏙️ אזורים</button>
+  </div>
+  <div id="leaflet-map"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CONTENT
+══════════════════════════════════════════ -->
+<div class="content-area" id="mainContent">
+
+  <!-- RESTAURANTS ──────────────────────── -->
+  <div class="tab-panel active" id="tab-restaurants">
+    <div class="sh">
+      <div class="sh-eyebrow">מדריך אוכל · טאיפיי</div>
+      <div class="sh-title">מסעדות</div>
+      <div class="sh-desc">🌟 מסעדות עם כוכב מישלן – הכי שווה לנסות</div>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" type="text" placeholder="חפשו מסעדה..." oninput="filterRows(this,'rest-list','rest-none')">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="list-group" id="rest-list">
+
+      <div class="list-row" data-s="面線町 נודלס zhongshan">
+        <div class="row-icon">🍜</div>
+        <div class="row-content">
+          <div class="row-title">面線町 (Miànxiàn Tīng)</div>
+          <div class="row-caption">נודלס עדינים · Zhongshan</div>
+          <div class="row-body">נודלס עדינים בציר בשר – פשוט, מדויק, בלתי נשכח</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Zhongshan</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="after 5 bar zhongshan">
+        <div class="row-icon">🍸</div>
+        <div class="row-content">
+          <div class="row-title">After 5</div>
+          <div class="row-caption">מסעדה / בר · Zhongshan</div>
+          <div class="row-body">אוכל ושתייה בשעות הערב – אווירה חברתית</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Zhongshan</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="品都串燒 BBQ da'an">
+        <div class="row-icon">🥩</div>
+        <div class="row-content">
+          <div class="row-title">品都串燒攤 忠孝</div>
+          <div class="row-caption">BBQ טייוואני · Da'an</div>
+          <div class="row-body">Self-select – שיפודי בשר וירקות לגריל. בחרו לבד מהתצוגה</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Da'an</span><span class="chip chip-addr">No. 299, Sec 4, Zhongxiao E Rd</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="無二會所 wu er japanese set da'an">
+        <div class="row-icon">🍱</div>
+        <div class="row-content">
+          <div class="row-title">無二會所 (Wu Er Hui Suo)</div>
+          <div class="row-caption">ארוחת set יפנית יוקרתית · Da'an</div>
+          <div class="row-body">טמפורה, סובה, ריבוי מנות. אווירה מדהימה ועיצוב ייחודי</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Da'an</span><span class="chip chip-addr">No. 12, Lane 61, Sec 2, Hangzhou S Rd</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="來旺小吃店 shilin traditional">
+        <div class="row-icon">🏠</div>
+        <div class="row-content">
+          <div class="row-title">來旺小吃店</div>
+          <div class="row-caption">מסעדה מסורתית · Shilin</div>
+          <div class="row-body">ליד מוזיאון הארמון הלאומי – מסעדה מקומית אותנטית</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Shilin</span><span class="chip chip-addr">No. 270, Sec 2, Zhi Shan Rd</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="beef noodle 牛肉麵 da'an">
+        <div class="row-icon">🥣</div>
+        <div class="row-content">
+          <div class="row-title">Taiwan Beef Noodles (牛肉麵·雞湯)</div>
+          <div class="row-caption">נודלס בשר בקר קלאסי</div>
+          <div class="row-body">אטריות ברוטב עמוק עם בשר בקר רך – קלאסיקה טייוואנית</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Da'an</span><span class="chip chip-addr">敦化南路1段164號</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="杭州小籠湯包 xiao long bao soup dumplings">
+        <div class="row-icon">🥟</div>
+        <div class="row-content">
+          <div class="row-title">杭州小籠湯包 — Hang Zhou XLB</div>
+          <div class="row-caption">כיסוני מרק מסורתיים</div>
+          <div class="row-body">כיסוני מרק מאודים בסלסלאות במבוק – ציר חם בפנים</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="老山東 lao shandong beef noodle">
+        <div class="row-icon">🍝</div>
+        <div class="row-content">
+          <div class="row-title">老山東牛肉麵 — Lao Shandong</div>
+          <div class="row-caption">נודלס ביד עם כיסונים</div>
+          <div class="row-body">נודלס בשר בקר עשויים ביד עם כיסונים מבושלים בבית</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="小王煮瓜 lu rou fan braised pork">
+        <div class="row-icon">🍚</div>
+        <div class="row-content">
+          <div class="row-title">小王煮瓜 (Wang's Broth)</div>
+          <div class="row-caption">Lu Rou Fan – המנה הלאומית</div>
+          <div class="row-body">חזיר מבושל ברוטב שוי על אורז – המנה הטייוואנית הלאומית</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="A Cheng Goose 阿城鵝肉 michelin roasted">
+        <div class="row-icon">🦢</div>
+        <div class="row-content">
+          <div class="row-title">A Cheng Goose (阿城鵝肉) 🌟</div>
+          <div class="row-caption">אווז קלוי · מישלן</div>
+          <div class="row-body">חצי אווז קלוי עם עור פריך ובשר עסיסי – Must-try</div>
+          <div class="row-meta"><span class="chip chip-gold">🌟 מישלן</span><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="weekend chicken club three cup san bei">
+        <div class="row-icon">🍗</div>
+        <div class="row-content">
+          <div class="row-title">Weekend Chicken Club</div>
+          <div class="row-caption">עוף שלושה כוסות</div>
+          <div class="row-body">עוף מטוגן בסגנון San Bei – בזיליקום, שומשום, רוטב עמוק</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="shang hao 上好 chicken rice">
+        <div class="row-icon">🍛</div>
+        <div class="row-content">
+          <div class="row-title">Shang Hao (上好)</div>
+          <div class="row-caption">אורז עם עוף</div>
+          <div class="row-body">מנה פשוטה ומדויקת – עוף על אורז, קלאסיקה טייוואנית</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="上順興香Q飯糰 fan tuan scallion rice ball">
+        <div class="row-icon">🍙</div>
+        <div class="row-content">
+          <div class="row-title">上順興香Q飯糰</div>
+          <div class="row-caption">פאן-טואן – ארוחת בוקר</div>
+          <div class="row-body">פאן-טואן עטוף בביסקוויט בצל ירוק קריספי – ארוחת בוקר מושלמת</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="仁弄砂鍋煲 sha guo bao tofu clay pot">
+        <div class="row-icon">🫕</div>
+        <div class="row-content">
+          <div class="row-title">仁弄砂鍋煲</div>
+          <div class="row-caption">סיר חרס עם טופו</div>
+          <div class="row-body">קוביות טופו רכות בסיר חרס – מרקם ייחודי וטעם מרוכז</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="源芳刈包 yuan fang gua bao michelin pork belly">
+        <div class="row-icon">🫔</div>
+        <div class="row-content">
+          <div class="row-title">源芳刈包 (Yuan Fang Gua Bao) 🌟</div>
+          <div class="row-caption">גואה-באו בטן חזיר · מישלן 2021–2024</div>
+          <div class="row-body">באו מאודה עם חזיר מעושן-מבושל, בוטנים וירוק</div>
+          <div class="row-meta"><span class="chip chip-gold">🌟 מישלן 2021–2024</span><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="no-results" id="rest-none" style="display:none">לא נמצאו תוצאות</div>
+  </div>
+
+  <!-- CAFES ────────────────────────────── -->
+  <div class="tab-panel" id="tab-cafes">
+    <div class="sh">
+      <div class="sh-eyebrow">קפה ותה · טאיפיי</div>
+      <div class="sh-title">בתי קפה וחנויות תה</div>
+      <div class="sh-desc">ספיישלטי, בתי תה מסורתיים, וקפה בוטיק</div>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" type="text" placeholder="חפשו בית קפה..." oninput="filterRows(this,'cafes-list','cafes-none')">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="list-group" id="cafes-list">
+
+      <div class="list-row" data-s="arabica zhongshan specialty">
+        <div class="row-icon">☕</div>
+        <div class="row-content">
+          <div class="row-title">% Arabica</div>
+          <div class="row-caption">ספיישלטי יוקרתי · Zhongshan</div>
+          <div class="row-body">רשת קפה יוקרתית מעוצבת – מינימליסטי ואיכותי</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Zhongshan</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="登波咖啡 coffee dumbo cinnamon roll">
+        <div class="row-icon">🥐</div>
+        <div class="row-content">
+          <div class="row-title">登波咖啡 (Coffee Dumbo)</div>
+          <div class="row-caption">קלאסיקה של טאיפיי</div>
+          <div class="row-body">מפורסם בלחמנייה קינמון עם שמנת, קרמל ואגוזים</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Zhongshan</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="iyoshi cola japanese artisan">
+        <div class="row-icon">🥤</div>
+        <div class="row-content">
+          <div class="row-title">Iyoshi Cola</div>
+          <div class="row-caption">קולה יפני אומנותי</div>
+          <div class="row-body">קולה בוטיק יפנית בטעמים מיוחדים – חוויה ייחודית</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Zhongshan</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="VWI chadwang bar da'an">
+        <div class="row-icon">🍵</div>
+        <div class="row-content">
+          <div class="row-title">VWI by CHADWANG</div>
+          <div class="row-caption">בר קפה מיוחד · Da'an</div>
+          <div class="row-body">שתייה מיוחדת ועיצוב ייחודי</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Da'an</span><span class="chip chip-addr">No. 16, Alley 4, Lane 251, Sec 3, Zhongxiao E Rd</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="郭怡美咖啡廳 dihua heritage cafe">
+        <div class="row-icon">🏛️</div>
+        <div class="row-content">
+          <div class="row-title">郭怡美咖啡廳</div>
+          <div class="row-caption">קפה מורשת · Dihua St</div>
+          <div class="row-body">בית קפה בבניין מורשת עתיק ברחוב דיהואה</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Dihua St</span><span class="chip chip-addr">No. 129, Sec 1, Dihua St</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="dihua halfday tea house">
+        <div class="row-icon">🍵</div>
+        <div class="row-content">
+          <div class="row-title">Dihua Halfday Tea House</div>
+          <div class="row-caption">בית תה מסורתי · Dihua St</div>
+          <div class="row-body">אווירה רגועה בבית תה מסורתי ברחוב המורשת</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Dihua St</span><span class="chip chip-addr">No. 103, Sec 1, Dihua St</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="小飲茶堂 xiaoyin tea temple antique">
+        <div class="row-icon">🏯</div>
+        <div class="row-content">
+          <div class="row-title">Xiaoyin Tea Temple 小飲茶堂</div>
+          <div class="row-caption">מקדש תה · Da'an</div>
+          <div class="row-body">עיצוב מרהיב עם ריהוט עתיק. תה עם עוגיות מסורתיות</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Da'an</span><span class="chip chip-addr">No. 12-1, Lane 143, Sec 1, Hangzhou S Rd</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="kuo astral bookshop dihua books">
+        <div class="row-icon">📚</div>
+        <div class="row-content">
+          <div class="row-title">Kuo's Astral Bookshop</div>
+          <div class="row-caption">ספרים + קפה · Dihua St</div>
+          <div class="row-body">ספרים עם פינת קפה ברחוב דיהואה – אווירה ספרותית</div>
+          <div class="row-meta"><span class="chip chip-area">📍 Dihua St</span><span class="chip chip-addr">No. 129, Sec 1, Dihua St</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="usagi cafe boutique">
+        <div class="row-icon">🐰</div>
+        <div class="row-content">
+          <div class="row-title">Usagi Cafe</div>
+          <div class="row-caption">קפה בוטיק</div>
+          <div class="row-body">בית קפה בוטיק אסתטי (@jerica.feasts)</div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="messy mark cafe minimal 2025">
+        <div class="row-icon">✏️</div>
+        <div class="row-content">
+          <div class="row-title">Messy Mark</div>
+          <div class="row-caption">קפה טרנדי ומינימליסטי</div>
+          <div class="row-body">עיצוב מינימליסטי עם ציורים על החלון. "Come sit with us"</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span><span class="chip chip-gold">☕ Coffee Guide 2025</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="R9 cafe boutique old building 2025">
+        <div class="row-icon">🏢</div>
+        <div class="row-content">
+          <div class="row-title">R9 Café</div>
+          <div class="row-caption">קפה בוטיק – בניין ישן</div>
+          <div class="row-body">בית קפה בבניין ישן עם עיצוב אסתטי</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span><span class="chip chip-gold">☕ Coffee Guide 2025</span></div>
+        </div>
+      </div>
+
+      <div class="list-row" data-s="cheng ji 成記 traditional old">
+        <div class="row-icon">🏪</div>
+        <div class="row-content">
+          <div class="row-title">Cheng Ji (成記)</div>
+          <div class="row-caption">בית קפה מסורתי</div>
+          <div class="row-body">בית קפה עתיק ומסורתי – אווירה נוסטלגית</div>
+          <div class="row-meta"><span class="chip chip-new">✨ חדש</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="no-results" id="cafes-none" style="display:none">לא נמצאו תוצאות</div>
+  </div>
+
+  <!-- FOOD ─────────────────────────────── -->
+  <div class="tab-panel" id="tab-food">
+    <div class="sh">
+      <div class="sh-eyebrow">אוכל רחוב · מאכלים מסורתיים</div>
+      <div class="sh-title">מאכלים טייוואניים</div>
+      <div class="sh-desc">מנות חובה – אוכל רחוב, קלאסיקות ושוק לילה</div>
+    </div>
+    <div class="food-grid">
+
+      <div class="food-card">
+        <div class="food-thumb g-rice">🍚</div>
+        <div class="food-body">
+          <div class="food-name">Lu Rou Fan (滷肉飯)</div>
+          <div class="food-where">כל מסעדה · National dish</div>
+          <div class="food-desc">חזיר קצוץ מבושל ברוטב שוי על אורז – המנה הלאומית</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-bao">🫔</div>
+        <div class="food-body">
+          <div class="food-name">Gua Bao (刈包)</div>
+          <div class="food-where">דוכנים ורחובות</div>
+          <div class="food-desc">"המבורגר טייוואני" – לחמנייה מאודה עם חזיר ובוטנים</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-street">🥟</div>
+        <div class="food-body">
+          <div class="food-name">Xiao Long Bao (小籠包)</div>
+          <div class="food-where">מסעדות · Din Tai Fung</div>
+          <div class="food-desc">כיסוני מרק מאודים – בצק דק, מילוי חזיר, ציר חם</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-bbq">🍢</div>
+        <div class="food-body">
+          <div class="food-name">Oyster Vermicelli (蚵仔麵線)</div>
+          <div class="food-where">שווקי הלילה</div>
+          <div class="food-desc">אטריות דקות עם צדפות בציר ג'לטיני אדמדם</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-warm">🧅</div>
+        <div class="food-body">
+          <div class="food-name">Scallion Pancake (蔥抓餅)</div>
+          <div class="food-where">ארוחת בוקר · אוכל רחוב</div>
+          <div class="food-desc">בצק שכבות קריספי עם בצל ירוק ולרוב ביצה מעל</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-drink">🧋</div>
+        <div class="food-body">
+          <div class="food-name">Bubble Tea (珍珠奶茶)</div>
+          <div class="food-where">בכל פינה · הומצא בטאיפיי</div>
+          <div class="food-desc">תה חלב עם פנינות טפיוקה – הומצא בטייוואן בשנות ה-80</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-sweet">🍡</div>
+        <div class="food-body">
+          <div class="food-name">Tang Yuan (湯圓)</div>
+          <div class="food-where">חנויות קינוחים</div>
+          <div class="food-desc">כופתאות אורז ממולאות שומשום שחור בציר מתוק</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-warm">🐔</div>
+        <div class="food-body">
+          <div class="food-name">Popcorn Chicken (鹹酥雞)</div>
+          <div class="food-where">כל שוק לילה</div>
+          <div class="food-desc">חתיכות עוף מטוגנות עמוק עם בזיליקום מטוגן – ממכר</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-rice">🍙</div>
+        <div class="food-body">
+          <div class="food-name">Fan Tuan (飯糰)</div>
+          <div class="food-where">ארוחות בוקר</div>
+          <div class="food-desc">גליל אורז דביק עם שריר מותסס, שומשום וחוטי בשר</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-noodle">🧅</div>
+        <div class="food-body">
+          <div class="food-name">Onion Pancake (天津蔥餅)</div>
+          <div class="food-where">Tian Jin · Ningxia</div>
+          <div class="food-desc">פנקייק בצל ירוק על אבן חמה – קריספי ועשיר</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-bbq">🥩</div>
+        <div class="food-body">
+          <div class="food-name">Pepper Bun (胡椒餅)</div>
+          <div class="food-where">Fuzhou Pork · Raohe</div>
+          <div class="food-desc">לחמנייה ממולאת חזיר ופלפל שחור, נאפית בתנור טנדור</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-sweet">🎡</div>
+        <div class="food-body">
+          <div class="food-name">Wheel Cake (車輪餅)</div>
+          <div class="food-where">דוכני רחוב</div>
+          <div class="food-desc">וופל גלגל עם שעועית אדומה, שוקולד או קרם</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-gold">🎂</div>
+        <div class="food-body">
+          <div class="food-name">Pineapple Cake (鳳梨酥)</div>
+          <div class="food-where">חנויות מזכרות</div>
+          <div class="food-desc">עוגיית ממלאת אננס מיושן – מאפה סיני אייקוני</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-thumb g-dark">🫕</div>
+        <div class="food-body">
+          <div class="food-name">Three Cup Chicken (三杯雞)</div>
+          <div class="food-where">מסעדות טייוואניות</div>
+          <div class="food-desc">עוף ברוטב שוי, שמן שומשום ובזיליקום – ריחני ועשיר</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AREAS ────────────────────────────── -->
+  <div class="tab-panel" id="tab-areas">
+    <div class="sh">
+      <div class="sh-eyebrow">מדריך שכונות</div>
+      <div class="sh-title">אזורים בטאיפיי</div>
+      <div class="sh-desc">כל שכונה עם האופי שלה</div>
+    </div>
+    <div class="block"><div class="block-title">🏙️ Zhongshan (中山)</div><ul><li><strong>אופי:</strong> עסקים, מסעדות, קפה טרנדי</li><li><strong>הכי טוב ל:</strong> ספיישלטי קפה, מסעדות ברמה גבוהה</li><li><strong>ראוי לציון:</strong> % Arabica, Coffee Dumbo, Iyoshi Cola, 面線町</li></ul></div>
+    <div class="block"><div class="block-title">🎓 Da'an (大安)</div><ul><li><strong>אופי:</strong> סטודנטים, אוכל זול ואיכותי, פארק מרכזי</li><li><strong>הכי טוב ל:</strong> אוכל מסורתי, מסעדות לא-יקרות</li><li><strong>ראוי לציון:</strong> Wu Er Hui Suo, 品都串燒, VWI by CHADWANG</li></ul></div>
+    <div class="block"><div class="block-title">🛍️ Ximending (西門町)</div><ul><li><strong>אופי:</strong> נוער, אנימה, אופנה, רחוב קניות</li><li><strong>הכי טוב ל:</strong> קניות, אוכל זול, אנרגיה של העיר</li></ul></div>
+    <div class="block"><div class="block-title">🌿 Dihua Street (迪化街)</div><ul><li><strong>אופי:</strong> מורשת, תרבות, ריפוי</li><li><strong>הכי טוב ל:</strong> קפה בבניינים ישנים, חנויות תבלינים ותה</li><li><strong>ראוי לציון:</strong> Dihua Halfday Tea House, 郭怡美咖啡廳, Kuo's Astral</li></ul></div>
+    <div class="block"><div class="block-title">🎪 Shilin (士林)</div><ul><li><strong>אופי:</strong> שוק לילה הגדול, מוזיאון הארמון הלאומי</li><li><strong>הכי טוב ל:</strong> אוכל רחוב, אטרקציות תיירותיות</li></ul></div>
+    <div class="block"><div class="block-title">🌃 Dongmen / Yongkang St</div><ul><li><strong>אופי:</strong> אוכל, תרבות, קפה בוטיק</li><li><strong>הכי טוב ל:</strong> Xiao Long Bao, בתי קפה חינניים</li><li><strong>ראוי לציון:</strong> Xiaoyin Tea Temple, Din Tai Fung</li></ul></div>
+    <div class="block"><div class="block-title">🌆 Xinyi (信義)</div><ul><li><strong>אופי:</strong> Taipei 101, קניות יוקרה</li><li><strong>הכי טוב ל:</strong> נוף ממגדל 101, קניות</li></ul></div>
+  </div>
+
+  <!-- PLACES ───────────────────────────── -->
+  <div class="tab-panel" id="tab-places">
+    <div class="sh"><div class="sh-eyebrow">ספוטים מיוחדים</div><div class="sh-title">מקומות לביקור</div><div class="sh-desc">שווקי לילה, שכונות מיוחדות ומקומות שחייבים לגעת</div></div>
+    <div class="list-group">
+      <div class="list-row"><div class="row-icon">🌃</div><div class="row-content"><div class="row-title">שוק לילה שילין (士林夜市)</div><div class="row-caption">שוק הלילה הגדול בטאיפיי</div><div class="row-body">האייקוני ביותר – אוכל רחוב, קניות, משחקים. פועל מ-16:00</div><div class="row-meta"><span class="chip chip-area">📍 Shilin</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🌿</div><div class="row-content"><div class="row-title">שוק לילה Ningxia (寧夏夜市)</div><div class="row-caption">שוק מקומי ואותנטי</div><div class="row-body">אוכל אמיתי ללא תיירים רבים – כאן אוכלים המקומיים</div><div class="row-meta"><span class="chip chip-area">📍 Datong</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🛤️</div><div class="row-content"><div class="row-title">שוק לילה Raohe (饒河夜市)</div><div class="row-caption">לאורך הנהר</div><div class="row-body">מסודר ונגיש, ידוע בPork Pepper Buns של Fuzhou</div><div class="row-meta"><span class="chip chip-area">📍 Songshan</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🏛️</div><div class="row-content"><div class="row-title">רחוב דיהואה (迪化街)</div><div class="row-caption">מורשת היסטורית</div><div class="row-body">בניינים בסגנון ברוק-הולנדי, חנויות תבלינים, קפה בוטיק</div><div class="row-meta"><span class="chip chip-area">📍 Datong</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🌳</div><div class="row-content"><div class="row-title">פארק Da'an Forest (大安森林公園)</div><div class="row-caption">ריאות העיר</div><div class="row-body">פארק עצום ירוק במרכז העיר – ריצות בוקר, פיקניק</div><div class="row-meta"><span class="chip chip-area">📍 Da'an</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🎨</div><div class="row-content"><div class="row-title">Huashan 1914 Creative Park</div><div class="row-caption">מרכז אמנות ותרבות</div><div class="row-body">מבנה ברוורי ישן שהפך למרכז תרבות – אמנות, אוכל, אירועים</div><div class="row-meta"><span class="chip chip-area">📍 Zhongzheng</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- ATTRACTIONS ──────────────────────── -->
+  <div class="tab-panel" id="tab-attractions">
+    <div class="sh"><div class="sh-eyebrow">אטרקציות</div><div class="sh-title">מה לראות ולעשות</div><div class="sh-desc">מוזיאונים, מגדלים, טבע ותרבות</div></div>
+    <div class="list-group">
+      <div class="list-row"><div class="row-icon">🏙️</div><div class="row-content"><div class="row-title">Taipei 101</div><div class="row-caption">מגדל אייקוני · Xinyi</div><div class="row-body">פעם הגבוה בעולם – תצפית ב-89 עם נוף 360° על העיר</div><div class="row-meta"><span class="chip chip-area">📍 Xinyi</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🏯</div><div class="row-content"><div class="row-title">מוזיאון הארמון הלאומי (故宮博物院)</div><div class="row-caption">מהמוזיאונים הגדולים בעולם</div><div class="row-body">700,000 יצירות אמנות סיניות – "כרוב ירקן" ו"בשר חזיר ירקן"</div><div class="row-meta"><span class="chip chip-area">📍 Shilin</span></div></div></div>
+      <div class="list-row"><div class="row-icon">⛪</div><div class="row-content"><div class="row-title">מקדש לונגשאן (龍山寺)</div><div class="row-caption">מקדש בודהיסטי מ-1738</div><div class="row-body">המקדש המרשים ביותר בטאיפיי – תפילות, קטורת ועיצוב מסורתי</div><div class="row-meta"><span class="chip chip-area">📍 Wanhua</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🌄</div><div class="row-content"><div class="row-title">הר הפילים (象山)</div><div class="row-caption">טיול עם נוף מדהים</div><div class="row-body">30 דקות הליכה – נוף מושלם לטייפה 101</div><div class="row-meta"><span class="chip chip-area">📍 Xinyi</span></div></div></div>
+      <div class="list-row"><div class="row-icon">♨️</div><div class="row-content"><div class="row-title">Beitou Hot Springs (北投溫泉)</div><div class="row-caption">ספא גופרית טבעי</div><div class="row-body">אמבטיות מים חמים טבעיים בצפון טאיפיי</div><div class="row-meta"><span class="chip chip-area">📍 Beitou</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🚡</div><div class="row-content"><div class="row-title">Maokong Gondola (貓空纜車)</div><div class="row-caption">רכבל תה על ההרים</div><div class="row-body">רכבל לפסגת הר עם מטעי תה – בתי תה ונוף מרהיב</div><div class="row-meta"><span class="chip chip-area">📍 Wenshan</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🎴</div><div class="row-content"><div class="row-title">CKS Memorial (中正紀念堂)</div><div class="row-caption">אנדרטה לאומית</div><div class="row-body">מבנה לבן אייקוני עם טקס החלפת משמר וגנים מסורתיים</div><div class="row-meta"><span class="chip chip-area">📍 Zhongzheng</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🌊</div><div class="row-content"><div class="row-title">Jiufen (九份)</div><div class="row-caption">כפר הרים ישן · יום טיול</div><div class="row-body">כפר הרים מרהיב מעל הים – פנסים אדומים ואווירת "Spirited Away"</div></div></div>
+    </div>
+  </div>
+
+  <!-- TIPS ─────────────────────────────── -->
+  <div class="tab-panel" id="tab-tips">
+    <div class="sh"><div class="sh-eyebrow">תכנון הטיול</div><div class="sh-title">לו״ז וטיפים</div><div class="sh-desc">מסלול מוצע וטיפים מעשיים</div></div>
+    <div class="block block-accent"><div class="block-title">📅 יום 1 – Zhongshan & Dihua</div><ol><li><strong>בוקר:</strong> Fan Tuan ← Coffee Dumbo</li><li><strong>צהריים:</strong> סיבוב ברחוב דיהואה ← Kuo's Astral Bookshop</li><li><strong>אחרי הצהריים:</strong> Dihua Halfday Tea House ← 郭怡美咖啡廳</li><li><strong>ערב:</strong> 面線町 ← שוק לילה Ningxia</li></ol></div>
+    <div class="block block-accent"><div class="block-title">📅 יום 2 – Da'an & Dongmen</div><ol><li><strong>בוקר:</strong> Scallion Pancakes ← % Arabica</li><li><strong>צהריים:</strong> 杭州小籠湯包 (Xiao Long Bao)</li><li><strong>אחרי הצהריים:</strong> Xiaoyin Tea Temple ← פארק Da'an Forest</li><li><strong>ערב:</strong> Wu Er Hui Suo ← VWI by CHADWANG</li></ol></div>
+    <div class="block block-accent"><div class="block-title">📅 יום 3 – Shilin & 101</div><ol><li><strong>בוקר:</strong> מוזיאון הארמון הלאומי + 來旺小吃店</li><li><strong>צהריים:</strong> Elephant Mountain ← Taipei 101</li><li><strong>ערב:</strong> שוק לילה שילין – A Cheng Goose + Popcorn Chicken</li></ol></div>
+    <div class="block block-accent"><div class="block-title">📅 יום 4 – Wanhua & Raohe</div><ol><li><strong>בוקר:</strong> מקדש לונגשאן</li><li><strong>צהריים:</strong> 小王煮瓜 (Lu Rou Fan)</li><li><strong>ערב:</strong> שוק לילה Raohe – Fuzhou Pepper Buns</li></ol></div>
+    <div class="hr"></div>
+    <div class="sh-eyebrow" style="margin-bottom:14px">מידע מעשי</div>
+    <table class="stoic-table">
+      <thead><tr><th>נושא</th><th>מידע</th></tr></thead>
+      <tbody>
+        <tr><td>💰 מטבע</td><td>NTD – 1 ₪ ≈ 9–10 NTD</td></tr>
+        <tr><td>🚇 תחבורה</td><td>MRT זול ואמין. EasyCard לכל ההסעות</td></tr>
+        <tr><td>📱 אינטרנט</td><td>כרטיס SIM בנמל התעופה – מהיר ומשתלם</td></tr>
+        <tr><td>🌡️ מזג אוויר</td><td>חם ולח בקיץ, נוח באביב ובסתיו</td></tr>
+        <tr><td>⏰ שעות</td><td>מסעדות: 11:00–14:00 ו-17:00–21:00</td></tr>
+        <tr><td>💬 שפה</td><td>Google Translate מצוין. אנגלית נדירה</td></tr>
+        <tr><td>💳 תשלום</td><td>מזומן מועדף. ATM בכל מקום</td></tr>
+        <tr><td>🚕 Uber</td><td>עובד – לפעמים זול מהמוניות</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TOP 10 ───────────────────────────── -->
+  <div class="tab-panel" id="tab-top10">
+    <div class="sh"><div class="sh-eyebrow">@jerica.feasts</div><div class="sh-title">TOP 10 BITES</div><div class="sh-desc">עשרת המאכלים הטובים ביותר בטאיפיי</div></div>
+    <div class="rank-list">
+      <div class="rank-row"><div class="rank-n gold">1</div><div class="rank-body"><div class="rank-food">🍜 面線町 – נודלס עדינים</div><div class="rank-place">Zhongshan</div><div class="rank-note">נודלס בציר בשר – פשוט, מדויק, בלתי נשכח</div></div></div>
+      <div class="rank-row"><div class="rank-n gold">2</div><div class="rank-body"><div class="rank-food">🦢 A Cheng Goose – אווז קלוי 🌟</div><div class="rank-place">מישלן · Wanhua</div><div class="rank-note">עור פריך, בשר עסיסי ומרוכז – מנה של חלום</div></div></div>
+      <div class="rank-row"><div class="rank-n gold">3</div><div class="rank-body"><div class="rank-food">🥟 杭州小籠湯包 – Xiao Long Bao</div><div class="rank-place">Dongmen</div><div class="rank-note">ציר חם בפנים, בצק דק – מגרסאות הטובות בעיר</div></div></div>
+      <div class="rank-row"><div class="rank-n">4</div><div class="rank-body"><div class="rank-food">🫔 源芳刈包 – Gua Bao 🌟</div><div class="rank-place">מישלן 2021–2024</div><div class="rank-note">הגואה-באו הכי טוב בעיר</div></div></div>
+      <div class="rank-row"><div class="rank-n">5</div><div class="rank-body"><div class="rank-food">🍚 小王煮瓜 – Lu Rou Fan</div><div class="rank-place">Wang's Broth</div><div class="rank-note">חזיר מבושל על אורז – המנה הלאומית</div></div></div>
+      <div class="rank-row"><div class="rank-n">6</div><div class="rank-body"><div class="rank-food">🥩 老山東 – Beef Noodles</div><div class="rank-place">Lao Shandong</div><div class="rank-note">נודלס ביד עם בשר בקר – עמוק ומנחם</div></div></div>
+      <div class="rank-row"><div class="rank-n">7</div><div class="rank-body"><div class="rank-food">🍗 Weekend Chicken Club</div><div class="rank-place">San Bei Chicken</div><div class="rank-note">בזיליקום, שומשום, רוטב עמוק</div></div></div>
+      <div class="rank-row"><div class="rank-n">8</div><div class="rank-body"><div class="rank-food">🧅 Tian Jin – Onion Pancake</div><div class="rank-place">Ningxia Night Market</div><div class="rank-note">פנקייק בצל ירוק קריספי</div></div></div>
+      <div class="rank-row"><div class="rank-n">9</div><div class="rank-body"><div class="rank-food">🥩 Fuzhou – Pepper Bun</div><div class="rank-place">Raohe Night Market</div><div class="rank-note">חמה ופריכה מהתנור</div></div></div>
+      <div class="rank-row"><div class="rank-n">10</div><div class="rank-body"><div class="rank-food">🎡 Wheel Cake – 車輪餅</div><div class="rank-place">דוכני רחוב</div><div class="rank-note">קינוח גלגל קסום עם שעועית אדומה</div></div></div>
+    </div>
+  </div>
+
+  <!-- SECOND PLATE ─────────────────────── -->
+  <div class="tab-panel" id="tab-secondplate">
+    <div class="sh"><div class="sh-eyebrow">@jerica.feasts · המלצות מיוחדות</div><div class="sh-title">Worth a Second Plate</div><div class="sh-desc">מסעדות שחייבים לחזור אליהן</div></div>
+    <div class="list-group">
+      <div class="list-row"><div class="row-icon">🍙</div><div class="row-content"><div class="row-title">上順興香Q飯糰 – Fan Tuan</div><div class="row-caption">פאן-טואן עטוף בבצל ירוק קריספי</div><div class="row-body">ארוחת בוקר שלמה בגליל אחד – פשוט לא מספיק עם אחד</div><div class="row-meta"><span class="chip chip-gold">✨ Worth a 2nd Plate</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🦢</div><div class="row-content"><div class="row-title">A Cheng Goose 🌟</div><div class="row-caption">אווז קלוי מישלן</div><div class="row-body">עור פריך, בשר עסיסי – גם אחרי צלחת ראשונה רוצים עוד</div><div class="row-meta"><span class="chip chip-gold">🌟 מישלן</span><span class="chip chip-new">✨ Worth a 2nd Plate</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🫕</div><div class="row-content"><div class="row-title">仁弄砂鍋煲 – Tofu Clay Pot</div><div class="row-caption">סיר חרס עם טופו</div><div class="row-body">מרקם שמימי ושלוות נשמה בכל ביס</div><div class="row-meta"><span class="chip chip-new">✨ Worth a 2nd Plate</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🍛</div><div class="row-content"><div class="row-title">Shang Hao (上好) – Chicken Rice</div><div class="row-caption">אורז עם עוף פשוט ומושלם</div><div class="row-body">כל ביס מזכיר למה האוכל הטייוואני מנצח</div><div class="row-meta"><span class="chip chip-new">✨ Worth a 2nd Plate</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🥟</div><div class="row-content"><div class="row-title">杭州小籠湯包 – Xiao Long Bao</div><div class="row-caption">כיסוני מרק</div><div class="row-body">פשוט לא מפסיקים – צלחת שנייה היא חובה</div><div class="row-meta"><span class="chip chip-new">✨ Worth a 2nd Plate</span></div></div></div>
+      <div class="list-row"><div class="row-icon">🍗</div><div class="row-content"><div class="row-title">Weekend Chicken Club – San Bei</div><div class="row-caption">עוף שלושה כוסות</div><div class="row-body">ניחוח הבזיליקום, הרוטב העמוק – לא מפסיקים לאכול</div><div class="row-meta"><span class="chip chip-new">✨ Worth a 2nd Plate</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- INSTAGRAM ────────────────────────── -->
+  <div class="tab-panel" id="tab-instagram">
+    <div class="sh"><div class="sh-eyebrow">מקורות המדריך</div><div class="sh-title">Instagram</div><div class="sh-desc">חשבונות שעזרו ליצור מדריך זה</div></div>
+    <div class="ig-list">
+      <div class="ig-row"><span class="ig-emo">📸</span><div><a href="https://www.instagram.com/jerica.feasts" target="_blank">@jerica.feasts</a><div class="ig-note">TOP 10 BITES · Worth a 2nd Plate · הכוח שמאחורי המדריך</div></div></div>
+      <div class="ig-row"><span class="ig-emo">🎬</span><div><a href="https://www.instagram.com/annabelsjourney" target="_blank">@annabelsjourney</a><div class="ig-note">מסלולי טאיפיי מפורטים לפי ימים</div></div></div>
+      <div class="ig-row"><span class="ig-emo">🍜</span><div><a href="https://www.instagram.com/mikexingchen" target="_blank">@mikexingchen</a><div class="ig-note">אוכל רחוב ומסעדות מקומיות</div></div></div>
+      <div class="ig-row"><span class="ig-emo">☕</span><div><a href="https://www.instagram.com/taipei.coffee" target="_blank">@taipei.coffee</a><div class="ig-note">Coffee Guide Taipei 2025</div></div></div>
+      <div class="ig-row"><span class="ig-emo">🌟</span><div><a href="https://www.instagram.com/michelinguide" target="_blank">@michelinguide</a><div class="ig-note">מישלן טייוואן</div></div></div>
+    </div>
+  </div>
+
+</div><!-- /content-area -->
+
+<!-- ══════════════════════════════════════════
+     CITY EMPTY STATE (injected by JS)
+══════════════════════════════════════════ -->
+<div id="city-empty" class="city-empty-state">
+  <span class="emo">🏙️</span>
+  <div class="ttl" id="city-empty-name">עדיין אין מקומות בעיר זו</div>
+  <div class="sub">היה הראשון להוסיף מסעדה, בית קפה או אטרקציה!</div>
+  <button class="add-btn-inline" onclick="openModal()">+ הוסף מקום</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FAB — ADD PLACE
+══════════════════════════════════════════ -->
+<button class="fab" onclick="openModal()">
+  <span class="fab-icon">＋</span>
+  הוסף מקום
+</button>
+
+<!-- ══════════════════════════════════════════
+     ADD PLACE MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="addModal" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ הוסף מקום חדש</div>
+    <form id="addPlaceForm" onsubmit="submitPlace(event)">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label" for="fp-city">עיר *</label>
+          <select class="form-select" id="fp-city" required>
+            <option value="">בחר עיר...</option>
+            <option value="טאיפיי">🏙️ טאיפיי</option>
+            <option value="טאינאן">🏯 טאינאן</option>
+            <option value="טאיגיונג">🌿 טאיגיונג</option>
+            <option value="גיופן">⛰️ גיופן</option>
+            <option value="הואלין">🏔️ הואלין</option>
+            <option value="טאיטונג">🌊 טאיטונג</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fp-cat">קטגוריה *</label>
+          <select class="form-select" id="fp-cat" required>
+            <option value="">בחר קטגוריה...</option>
+            <option value="rest">🍜 מסעדה</option>
+            <option value="cafes">☕ קפה ותה</option>
+            <option value="food">🥢 אוכל רחוב</option>
+            <option value="areas">🏙️ אזור / שכונה</option>
+            <option value="places">📍 מקום / אטרקציה</option>
+            <option value="attractions">🎡 אטרקציה</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fp-name">שם המקום *</label>
+        <input class="form-input" id="fp-name" type="text" placeholder="שם המסעדה / בית קפה..." required>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fp-caption">כיתוב קצר</label>
+        <input class="form-input" id="fp-caption" type="text" placeholder="לדוגמה: נודלס בשר בקר · Da'an">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fp-desc">תיאור</label>
+        <textarea class="form-textarea" id="fp-desc" placeholder="תארו את המקום בכמה מילים..."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fp-tip">טיפ אישי</label>
+        <input class="form-input" id="fp-tip" type="text" placeholder="מה כדאי להזמין / מתי להגיע...">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fp-addr">כתובת</label>
+        <input class="form-input" id="fp-addr" type="text" placeholder="כתובת...">
+      </div>
+      <div class="form-field">
+        <label class="form-label">תוויות</label>
+        <div class="form-checkboxes">
+          <label class="form-checkbox-item"><input type="checkbox" id="fp-michelin"> 🌟 מישלן</label>
+          <label class="form-checkbox-item"><input type="checkbox" id="fp-top10"> 🏆 TOP 10</label>
+          <label class="form-checkbox-item"><input type="checkbox" id="fp-2ndplate"> ✨ Worth 2nd Plate</label>
+          <label class="form-checkbox-item"><input type="checkbox" id="fp-budget"> 💰 תקציבי</label>
+        </div>
+      </div>
+      <button type="submit" class="form-submit">שמור מקום</button>
+      <button type="button" class="form-cancel" onclick="closeModal()">ביטול</button>
+    </form>
+  </div>
+</div>
+
+<div class="footer">מדריך טייוואן · 2025</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ═══════════════════════════════════════
+   CITY FILTERING
+═══════════════════════════════════════ */
+let activeCity = 'all';
+
+// Mark all existing hard-coded rows as טאיפיי
+document.querySelectorAll('.list-row:not([data-city])').forEach(r => {
+  r.dataset.city = 'טאיפיי';
+});
+
+function setCityFilter(city) {
+  activeCity = city;
+  // Update chips
+  document.querySelectorAll('.city-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.city === city);
+  });
+  // Filter rows
+  document.querySelectorAll('.list-row').forEach(r => {
+    const match = city === 'all' || r.dataset.city === city;
+    r.style.display = match ? '' : 'none';
+  });
+  // Check empty state per panel
+  const panels = document.querySelectorAll('#mainContent .tab-panel.active');
+  updateCityEmpty(panels.length ? panels[0] : null, city);
+}
+
+function updateCityEmpty(panel, city) {
+  const emptyEl = document.getElementById('city-empty');
+  if (!panel || city === 'all') { emptyEl.style.display = 'none'; return; }
+  const visible = panel.querySelectorAll('.list-row:not([style*="display: none"])');
+  const hasRows = [...visible].some(r => r.style.display !== 'none');
+  if (hasRows) {
+    emptyEl.style.display = 'none';
+  } else {
+    document.getElementById('city-empty-name').textContent = 'עדיין אין מקומות ב' + city;
+    emptyEl.style.display = 'block';
+  }
+}
+
+document.querySelectorAll('.city-chip').forEach(chip => {
+  chip.addEventListener('click', () => setCityFilter(chip.dataset.city));
+});
+
+/* ═══════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════ */
+const allBtns = document.querySelectorAll('.tab-btn');
+const allPanels = document.querySelectorAll('#mainContent .tab-panel');
+const mainEl = document.getElementById('mainContent');
+const mapEl  = document.getElementById('map-panel');
+
+allBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    allBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'map') {
+      mainEl.style.display = 'none';
+      mapEl.style.display  = 'flex';
+      mapEl.classList.add('active');
+      document.getElementById('city-empty').style.display = 'none';
+      if (!window._mapDone) initMap();
+    } else {
+      mainEl.style.display = '';
+      mapEl.style.display  = 'none';
+      mapEl.classList.remove('active');
+      allPanels.forEach(p => p.classList.remove('active'));
+      const t = document.getElementById('tab-' + tab);
+      if (t) {
+        t.classList.add('active');
+        setTimeout(() => updateCityEmpty(t, activeCity), 10);
+      }
+    }
+  });
+});
+
+/* ═══════════════════════════════════════
+   ADD PLACE — MODAL
+═══════════════════════════════════════ */
+function openModal() {
+  // Pre-fill city from active city filter
+  const sel = document.getElementById('fp-city');
+  if (activeCity !== 'all') sel.value = activeCity;
+  document.getElementById('addModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('addPlaceForm').reset();
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('addModal')) closeModal();
+}
+
+const EMOJI_MAP = {
+  rest:'🍜', cafes:'☕', food:'🥢', areas:'🏙️', places:'📍', attractions:'🎡'
+};
+const TAB_LABEL = {
+  rest:'מסעדה', cafes:'קפה ותה', food:'אוכל רחוב',
+  areas:'אזור', places:'מקום', attractions:'אטרקציה'
+};
+
+function submitPlace(e) {
+  e.preventDefault();
+  const city    = document.getElementById('fp-city').value;
+  const cat     = document.getElementById('fp-cat').value;
+  const name    = document.getElementById('fp-name').value.trim();
+  const caption = document.getElementById('fp-caption').value.trim();
+  const desc    = document.getElementById('fp-desc').value.trim();
+  const tip     = document.getElementById('fp-tip').value.trim();
+  const addr    = document.getElementById('fp-addr').value.trim();
+  const michelin  = document.getElementById('fp-michelin').checked;
+  const top10     = document.getElementById('fp-top10').checked;
+  const plate2nd  = document.getElementById('fp-2ndplate').checked;
+  const budget    = document.getElementById('fp-budget').checked;
+
+  // Build chips HTML
+  let chips = '';
+  if (michelin) chips += '<span class="chip chip-gold">🌟 מישלן</span>';
+  if (top10)    chips += '<span class="chip chip-gold">🏆 TOP 10</span>';
+  if (plate2nd) chips += '<span class="chip chip-new">✨ Worth a 2nd Plate</span>';
+  if (budget)   chips += '<span class="chip chip-area">💰 תקציבי</span>';
+  if (addr)     chips += `<span class="chip chip-addr">📍 ${addr}</span>`;
+
+  // Build row HTML
+  const row = document.createElement('div');
+  row.className = 'list-row';
+  row.dataset.city = city;
+  row.dataset.s    = (name + ' ' + caption + ' ' + desc).toLowerCase();
+  row.innerHTML = `
+    <div class="row-icon">${EMOJI_MAP[cat] || '📍'}</div>
+    <div class="row-content">
+      <div class="row-title">${name} <span class="user-badge">✍️ הוספת</span></div>
+      <div class="row-caption">${caption || TAB_LABEL[cat] + ' · ' + city}</div>
+      ${desc ? `<div class="row-body">${desc}</div>` : ''}
+      ${tip  ? `<div class="row-body" style="color:var(--acc-text);font-style:italic">💡 ${tip}</div>` : ''}
+      ${chips ? `<div class="row-meta">${chips}</div>` : ''}
+    </div>`;
+
+  // Inject into the correct tab list
+  const listId = cat === 'rest' ? 'rest-list'
+               : cat === 'cafes' ? 'cafes-list'
+               : cat === 'food' ? 'food-list'
+               : cat === 'areas' ? 'areas-list'
+               : 'places-list';
+  const listEl = document.getElementById(listId) || document.getElementById('places-list');
+  if (listEl) listEl.appendChild(row);
+
+  // Apply current city filter to new row
+  if (activeCity !== 'all' && row.dataset.city !== activeCity) {
+    row.style.display = 'none';
+  }
+
+  // Save to localStorage
+  const stored = JSON.parse(localStorage.getItem('tw_places') || '[]');
+  stored.push({ city, cat, name, caption, desc, tip, addr, michelin, top10, plate2nd, budget });
+  localStorage.setItem('tw_places', JSON.stringify(stored));
+
+  // Switch to the correct tab to show the new item
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${cat === 'rest' ? 'restaurants' : cat}"]`);
+  if (targetBtn) targetBtn.click();
+
+  closeModal();
+}
+
+/* SEARCH */
+function filterRows(inp, listId, noneId) {
+  const q = inp.value.toLowerCase().trim();
+  const rows = document.querySelectorAll('#' + listId + ' .list-row');
+  let n = 0;
+  rows.forEach(r => {
+    const ok = !q || ((r.dataset.s || '') + r.innerText).toLowerCase().includes(q);
+    r.style.display = ok ? '' : 'none';
+    if (ok) n++;
+  });
+  const el = document.getElementById(noneId);
+  if (el) el.style.display = n ? 'none' : 'block';
+}
+
+/* MAP */
+const PINS = [
+  {lat:25.0481,lng:121.5209,t:'rest',n:'面線町',d:'נודלס עדינים בציר בשר',a:'Zhongshan'},
+  {lat:25.0450,lng:121.5280,t:'rest',n:'品都串燒攤',d:'BBQ self-select',a:'Zhongxiao E Rd'},
+  {lat:25.0314,lng:121.5344,t:'rest',n:'無二會所',d:'ארוחת set יפנית',a:'Hangzhou S Rd'},
+  {lat:25.1023,lng:121.5488,t:'rest',n:'來旺小吃店',d:'מסעדה מסורתית',a:'Shilin'},
+  {lat:25.0450,lng:121.5490,t:'rest',n:'Taiwan Beef Noodles',d:'נודלס בשר בקר',a:'敦化南路'},
+  {lat:25.0342,lng:121.5267,t:'rest',n:'杭州小籠湯包',d:'כיסוני מרק',a:'Dongmen'},
+  {lat:25.0419,lng:121.5070,t:'rest',n:'小王煮瓜',d:'Lu Rou Fan',a:'Wanhua'},
+  {lat:25.0466,lng:121.5184,t:'rest',n:'老山東牛肉麵',d:'Homemade Noodles',a:'Zhongshan'},
+  {lat:25.0367,lng:121.5030,t:'rest',n:'A Cheng Goose 🌟',d:'אווז קלוי · מישלן',a:'Wanhua'},
+  {lat:25.0420,lng:121.5350,t:'rest',n:'Weekend Chicken Club',d:'San Bei Chicken',a:"Da'an"},
+  {lat:25.0380,lng:121.5290,t:'rest',n:'源芳刈包 🌟',d:'Gua Bao · מישלן',a:"Da'an"},
+  {lat:25.0529,lng:121.5218,t:'cafe',n:'% Arabica',d:'ספיישלטי יוקרתי',a:'Zhongshan'},
+  {lat:25.0498,lng:121.5245,t:'cafe',n:'Coffee Dumbo',d:'לחמניית קינמון',a:'Zhongshan'},
+  {lat:25.0511,lng:121.5235,t:'cafe',n:'Iyoshi Cola',d:'קולה יפני',a:'Zhongshan'},
+  {lat:25.0435,lng:121.5495,t:'cafe',n:'VWI by CHADWANG',d:'בר קפה מיוחד',a:"Da'an"},
+  {lat:25.0571,lng:121.5086,t:'cafe',n:'郭怡美咖啡廳',d:'קפה מורשת',a:'Dihua St'},
+  {lat:25.0574,lng:121.5089,t:'cafe',n:'Dihua Halfday Tea',d:'בית תה מסורתי',a:'Dihua St'},
+  {lat:25.0325,lng:121.5258,t:'cafe',n:'Xiaoyin Tea Temple',d:'מקדש תה',a:'Hangzhou S Rd'},
+  {lat:25.0572,lng:121.5087,t:'cafe',n:"Kuo's Astral",d:'ספרים + קפה',a:'Dihua St'},
+  {lat:25.0482,lng:121.5238,t:'cafe',n:'Messy Mark',d:'קפה מינימליסטי',a:'Zhongshan'},
+  {lat:25.0339,lng:121.5645,t:'attr',n:'Taipei 101',d:'נוף 360°',a:'Xinyi'},
+  {lat:25.1023,lng:121.5487,t:'attr',n:'מוזיאון הארמון',d:'700,000 יצירות',a:'Shilin'},
+  {lat:25.0370,lng:121.4997,t:'attr',n:'מקדש לונגשאן',d:'מקדש בודהיסטי',a:'Wanhua'},
+  {lat:25.0268,lng:121.5782,t:'attr',n:'הר הפילים',d:'נוף לטייפה 101',a:'Xinyi'},
+  {lat:25.1372,lng:121.5040,t:'attr',n:'Beitou Hot Springs',d:'ספא גופרית',a:'Beitou'},
+  {lat:25.0363,lng:121.5200,t:'attr',n:'CKS Memorial',d:'אנדרטה לאומית',a:'Zhongzheng'},
+  {lat:25.1076,lng:121.8442,t:'attr',n:'Jiufen',d:'כפר הרים',a:'יום טיול'},
+  {lat:25.0879,lng:121.5241,t:'area',n:'שוק לילה שילין',d:'שוק הלילה הגדול',a:'Shilin'},
+  {lat:25.0580,lng:121.5141,t:'area',n:'שוק לילה Ningxia',d:'שוק מקומי',a:'Datong'},
+  {lat:25.0480,lng:121.5763,t:'area',n:'שוק לילה Raohe',d:'Pepper Buns',a:'Songshan'},
+  {lat:25.0569,lng:121.5083,t:'area',n:'Dihua Street',d:'מורשת היסטורי',a:'Datong'},
+  {lat:25.0437,lng:121.5009,t:'area',n:'Ximending',d:'קניות ונוער',a:'Wanhua'},
+  {lat:25.0398,lng:121.5344,t:'area',n:"Da'an Forest Park",d:'ריאות העיר',a:"Da'an"},
+  {lat:25.0359,lng:121.5626,t:'area',n:'Xinyi District',d:'101 · יוקרה',a:'Xinyi'},
+];
+
+const CFG = {
+  rest:{clr:'#C0503A',ico:'🍜'},
+  cafe:{clr:'#B8892A',ico:'☕'},
+  attr:{clr:'#3A6298',ico:'🎡'},
+  area:{clr:'#3A7A50',ico:'🏙️'},
+};
+const LBL = {rest:'מסעדה',cafe:'קפה',attr:'אטרקציה',area:'אזור'};
+
+let map, lMarkers = [];
+
+function mkIco(t) {
+  const c = CFG[t];
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${c.clr};
+      border:2px solid rgba(255,255,255,0.7);display:flex;align-items:center;
+      justify-content:center;font-size:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);cursor:pointer;">${c.ico}</div>`,
+    iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-16]
+  });
+}
+
+function initMap() {
+  window._mapDone = true;
+  map = L.map('leaflet-map').setView([25.051,121.535],13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; OpenStreetMap &copy; CARTO',
+    subdomains:'abcd',maxZoom:20
+  }).addTo(map);
+  PINS.forEach(p => {
+    const m = L.marker([p.lat,p.lng],{icon:mkIco(p.t)}).addTo(map)
+      .bindPopup(`<div class="pop-name">${p.n}</div>
+        <span class="pop-chip p-${p.t}">${LBL[p.t]}</span>
+        <div class="pop-note">${p.d}</div>
+        <div class="pop-addr">📍 ${p.a}</div>`);
+    m._pt = p.t; lMarkers.push(m);
+  });
+}
+
+function filterMap(type, btn) {
+  document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  lMarkers.forEach(m => {
+    const show = type==='all' || m._pt===type;
+    show ? (!map.hasLayer(m) && map.addLayer(m)) : (map.hasLayer(m) && map.removeLayer(m));
+  });
+}
+
+/* ═══════════════════════════════════════
+   RESTORE SAVED PLACES FROM LOCALSTORAGE
+═══════════════════════════════════════ */
+(function restorePlaces() {
+  const stored = JSON.parse(localStorage.getItem('tw_places') || '[]');
+  stored.forEach(p => {
+    const chips_html = [
+      p.michelin ? '<span class="chip chip-gold">🌟 מישלן</span>' : '',
+      p.top10    ? '<span class="chip chip-gold">🏆 TOP 10</span>' : '',
+      p.plate2nd ? '<span class="chip chip-new">✨ Worth a 2nd Plate</span>' : '',
+      p.budget   ? '<span class="chip chip-area">💰 תקציבי</span>' : '',
+      p.addr     ? `<span class="chip chip-addr">📍 ${p.addr}</span>` : ''
+    ].join('');
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.dataset.city = p.city;
+    row.dataset.s    = (p.name + ' ' + p.caption + ' ' + p.desc).toLowerCase();
+    row.innerHTML = `
+      <div class="row-icon">${EMOJI_MAP[p.cat] || '📍'}</div>
+      <div class="row-content">
+        <div class="row-title">${p.name} <span class="user-badge">✍️ הוספת</span></div>
+        <div class="row-caption">${p.caption || TAB_LABEL[p.cat] + ' · ' + p.city}</div>
+        ${p.desc ? `<div class="row-body">${p.desc}</div>` : ''}
+        ${p.tip  ? `<div class="row-body" style="color:var(--acc-text);font-style:italic">💡 ${p.tip}</div>` : ''}
+        ${chips_html ? `<div class="row-meta">${chips_html}</div>` : ''}
+      </div>`;
+    const listId = p.cat === 'rest' ? 'rest-list'
+                 : p.cat === 'cafes' ? 'cafes-list'
+                 : p.cat === 'food' ? 'food-list'
+                 : p.cat === 'areas' ? 'areas-list'
+                 : 'places-list';
+    const listEl = document.getElementById(listId) || document.getElementById('places-list');
+    if (listEl) listEl.appendChild(row);
+  });
+})();
+</script>
+</body>
+</html>
