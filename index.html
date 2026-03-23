@@ -828,6 +828,26 @@
       font-weight: 500;
       font-size: 0.72rem;
     }
+    .ai-fill-btn {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--acc-soft), rgba(184,137,42,0.18));
+      border: 1.5px dashed var(--acc-line);
+      border-radius: var(--r);
+      font-family: 'Assistant', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--acc-text);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .ai-fill-btn:hover { border-style: solid; background: var(--acc-soft); }
+    .ai-fill-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -1481,6 +1501,10 @@
     <form id="addPlaceForm" onsubmit="submitPlace(event)">
       <div class="form-row">
         <div class="form-field">
+          <label class="form-label" for="fp-name">שם המקום *</label>
+          <input class="form-input" id="fp-name" type="text" placeholder="שם המסעדה / מקום..." required>
+        </div>
+        <div class="form-field">
           <label class="form-label" for="fp-city">עיר *</label>
           <select class="form-select" id="fp-city" required>
             <option value="">בחר עיר...</option>
@@ -1492,33 +1516,34 @@
             <option value="טאיטונג">🌊 טאיטונג</option>
           </select>
         </div>
-        <div class="form-field">
-          <label class="form-label" for="fp-cat">קטגוריה *</label>
-          <select class="form-select" id="fp-cat" required>
-            <option value="">בחר קטגוריה...</option>
-            <option value="rest">🍜 מסעדה</option>
-            <option value="cafes">☕ קפה ותה</option>
-            <option value="food">🥢 אוכל רחוב</option>
-            <option value="areas">🏙️ אזור / שכונה</option>
-            <option value="places">📍 מקום / אטרקציה</option>
-            <option value="attractions">🎡 אטרקציה</option>
-          </select>
-        </div>
+      </div>
+      <button type="button" class="ai-fill-btn" id="aiFillBtn" onclick="autoFill()">
+        <span id="aiFillIcon">✨</span> <span id="aiFillText">מלא אוטומטית עם AI</span>
+      </button>
+      <div id="aiFillNote" style="text-align:center;font-size:0.75rem;color:var(--acc-text);margin-bottom:14px;display:none;">
+        ✅ AI מילא את הפרטים — בדוק ועדכן לפי הצורך
       </div>
       <div class="form-field">
-        <label class="form-label" for="fp-name">שם המקום *</label>
-        <input class="form-input" id="fp-name" type="text" placeholder="שם המסעדה / בית קפה..." required>
+        <label class="form-label" for="fp-cat">קטגוריה</label>
+        <select class="form-select" id="fp-cat">
+          <option value="">בחר...</option>
+          <option value="rest">🍜 מסעדה</option>
+          <option value="cafes">☕ קפה ותה</option>
+          <option value="food">🥢 אוכל רחוב</option>
+          <option value="areas">🏙️ אזור / שכונה</option>
+          <option value="places">📍 מקום / אטרקציה</option>
+        </select>
       </div>
       <div class="form-field">
         <label class="form-label" for="fp-caption">כיתוב קצר</label>
-        <input class="form-input" id="fp-caption" type="text" placeholder="לדוגמה: נודלס בשר בקר · Da'an">
+        <input class="form-input" id="fp-caption" type="text" placeholder="לדוגמה: קפה בוטיק · Da'an">
       </div>
       <div class="form-field">
         <label class="form-label" for="fp-desc">תיאור</label>
-        <textarea class="form-textarea" id="fp-desc" placeholder="תארו את המקום בכמה מילים..."></textarea>
+        <textarea class="form-textarea" id="fp-desc" placeholder="תיאור המקום..."></textarea>
       </div>
       <div class="form-field">
-        <label class="form-label" for="fp-tip">טיפ אישי</label>
+        <label class="form-label" for="fp-tip">טיפ</label>
         <input class="form-input" id="fp-tip" type="text" placeholder="מה כדאי להזמין / מתי להגיע...">
       </div>
       <div class="form-field">
@@ -1534,7 +1559,7 @@
           <label class="form-checkbox-item"><input type="checkbox" id="fp-budget"> 💰 תקציבי</label>
         </div>
       </div>
-      <button type="submit" class="form-submit">שמור מקום</button>
+      <button type="submit" class="form-submit">💾 שמור מקום</button>
       <button type="button" class="form-cancel" onclick="closeModal()">ביטול</button>
     </form>
   </div>
@@ -1646,6 +1671,57 @@ const TAB_LABEL = {
   rest:'מסעדה', cafes:'קפה ותה', food:'אוכל רחוב',
   areas:'אזור', places:'מקום', attractions:'אטרקציה'
 };
+
+const CAT_TO_TAB = {
+  'מסעדה':'rest', 'קפה ותה':'cafes', 'אוכל רחוב':'food',
+  'אזור':'areas', 'טבע':'places', 'אטרקציה':'places', 'שוק לילה':'places'
+};
+
+async function autoFill() {
+  const name = document.getElementById('fp-name').value.trim();
+  const city = document.getElementById('fp-city').value;
+  if (!name) { alert('הכנס שם מקום תחילה'); return; }
+  if (!city) { alert('בחר עיר תחילה'); return; }
+
+  const btn = document.getElementById('aiFillBtn');
+  const icon = document.getElementById('aiFillIcon');
+  const txt  = document.getElementById('aiFillText');
+  btn.disabled = true;
+  icon.textContent = '⏳';
+  txt.textContent  = 'AI חושב...';
+
+  try {
+    const res  = await fetch('/api/add-place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, city })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const p = await res.json();
+
+    // Fill the form
+    if (p.caption)  document.getElementById('fp-caption').value = p.caption;
+    if (p.description) document.getElementById('fp-desc').value = p.description;
+    if (p.tips)     document.getElementById('fp-tip').value    = p.tips;
+    if (p.address)  document.getElementById('fp-addr').value   = p.address;
+    if (p.michelin) document.getElementById('fp-michelin').checked = true;
+    if (p.top10)    document.getElementById('fp-top10').checked    = true;
+
+    // Map category
+    const catVal = CAT_TO_TAB[p.category] || 'places';
+    document.getElementById('fp-cat').value = catVal;
+
+    document.getElementById('aiFillNote').style.display = 'block';
+    icon.textContent = '✅';
+    txt.textContent  = 'מולא ע"י AI — אפשר לערוך';
+
+  } catch (e) {
+    console.error(e);
+    icon.textContent = '⚠️';
+    txt.textContent  = 'שגיאה — מלא ידנית';
+    btn.disabled = false;
+  }
+}
 
 function submitPlace(e) {
   e.preventDefault();
