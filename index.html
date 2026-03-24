@@ -1938,6 +1938,69 @@ function filterMap(type, btn) {
     if (listEl) listEl.appendChild(row);
   });
 })();
+
+/* ═══════════════════════════════════════
+   LOAD PLACES FROM NOTION ON PAGE START
+═══════════════════════════════════════ */
+const CAT_NAME_TO_KEY = {
+  'מסעדה':'rest', 'קפה ותה':'cafes', 'אוכל רחוב':'food',
+  'אזור':'areas', 'טבע':'places', 'אטרקציה':'places',
+  'שוק לילה':'places'
+};
+
+function renderNotionPlace(p) {
+  const catKey = CAT_NAME_TO_KEY[p.category] || 'places';
+  const listId = CAT_TO_LIST[catKey] || 'places-list';
+  const listEl = document.getElementById(listId);
+  if (!listEl) return;
+
+  // Skip if already in the list (hard-coded version exists)
+  const existing = [...listEl.querySelectorAll('.row-title')].find(
+    el => el.textContent.trim().startsWith(p.name)
+  );
+  if (existing) return;
+
+  let chips = '';
+  if (p.michelin) chips += '<span class="chip chip-gold">🌟 מישלן</span>';
+  if (p.top10)    chips += '<span class="chip chip-gold">🏆 TOP 10</span>';
+  if (p.address)  chips += `<span class="chip chip-addr">📍 ${p.address}</span>`;
+  (p.tags || []).forEach(t => {
+    if (t === 'תקציב נמוך') chips += '<span class="chip chip-area">💰 תקציבי</span>';
+    if (t === 'must-try')   chips += '<span class="chip chip-new">✨ must-try</span>';
+  });
+
+  const row = document.createElement('div');
+  row.className = 'list-row';
+  row.dataset.city = p.city;
+  row.dataset.s    = (p.name + ' ' + p.desc).toLowerCase();
+  row.innerHTML = `
+    <div class="row-icon">📍</div>
+    <div class="row-content">
+      <div class="row-title">${p.name}</div>
+      <div class="row-caption">${p.category}${p.city ? ' · ' + p.city : ''}</div>
+      ${p.desc    ? `<div class="row-body">${p.desc}</div>` : ''}
+      ${p.tips    ? `<div class="row-body" style="color:var(--acc-text);font-style:italic">💡 ${p.tips}</div>` : ''}
+      ${chips     ? `<div class="row-meta">${chips}</div>` : ''}
+    </div>`;
+
+  listEl.appendChild(row);
+}
+
+async function loadNotionPlaces() {
+  try {
+    const res = await fetch('/api/places');
+    if (!res.ok) return;
+    const places = await res.json();
+    places.forEach(renderNotionPlace);
+    // Re-apply city filter after loading
+    setCityFilter(activeCity);
+  } catch (e) {
+    console.warn('Could not load Notion places:', e);
+  }
+}
+
+// Load after a short delay so the page renders first
+setTimeout(loadNotionPlaces, 500);
 </script>
 </body>
 </html>
