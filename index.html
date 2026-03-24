@@ -1677,8 +1677,14 @@ const CAT_TO_TAB = {
   'אזור':'areas', 'טבע':'places', 'אטרקציה':'attractions', 'שוק לילה':'places'
 };
 const CAT_TO_LIST = {
-  rest:'rest-list', cafes:'cafes-list', food:'places-list',
-  areas:'places-list', places:'places-list', attractions:'attractions-list'
+  rest:'rest-list', cafes:'cafes-list',
+  food:'places-list', areas:'places-list',
+  places:'places-list', attractions:'places-list'
+};
+const CAT_TO_TAB_KEY = {
+  rest:'restaurants', cafes:'cafes',
+  food:'places', areas:'places',
+  places:'places', attractions:'places'
 };
 
 // Store AI-generated data to use later on submit
@@ -1789,7 +1795,7 @@ function submitPlace(e) {
   }).catch(err => console.warn('Notion sync failed:', err));
 
   // Switch to the correct tab to show the new item
-  const tabKey = cat === 'rest' ? 'restaurants' : cat;
+  const tabKey = CAT_TO_TAB_KEY[cat] || 'places';
   const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabKey}"]`);
   if (targetBtn) targetBtn.click();
 
