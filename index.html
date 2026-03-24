@@ -1659,6 +1659,15 @@ function closeModal() {
   document.getElementById('addModal').classList.remove('open');
   document.body.style.overflow = '';
   document.getElementById('addPlaceForm').reset();
+  // Reset AI button state
+  const btn  = document.getElementById('aiFillBtn');
+  const icon = document.getElementById('aiFillIcon');
+  const txt  = document.getElementById('aiFillText');
+  btn.disabled = false;
+  icon.textContent = '✨';
+  txt.textContent  = 'מלא אוטומטית עם AI';
+  document.getElementById('aiFillNote').style.display = 'none';
+  _aiData = null;
 }
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('addModal')) closeModal();
