@@ -1380,7 +1380,7 @@
   <!-- PLACES ───────────────────────────── -->
   <div class="tab-panel" id="tab-places">
     <div class="sh"><div class="sh-eyebrow">ספוטים מיוחדים</div><div class="sh-title">מקומות לביקור</div><div class="sh-desc">שווקי לילה, שכונות מיוחדות ומקומות שחייבים לגעת</div></div>
-    <div class="list-group">
+    <div class="list-group" id="places-list">
       <div class="list-row"><div class="row-icon">🌃</div><div class="row-content"><div class="row-title">שוק לילה שילין (士林夜市)</div><div class="row-caption">שוק הלילה הגדול בטאיפיי</div><div class="row-body">האייקוני ביותר – אוכל רחוב, קניות, משחקים. פועל מ-16:00</div><div class="row-meta"><span class="chip chip-area">📍 Shilin</span></div></div></div>
       <div class="list-row"><div class="row-icon">🌿</div><div class="row-content"><div class="row-title">שוק לילה Ningxia (寧夏夜市)</div><div class="row-caption">שוק מקומי ואותנטי</div><div class="row-body">אוכל אמיתי ללא תיירים רבים – כאן אוכלים המקומיים</div><div class="row-meta"><span class="chip chip-area">📍 Datong</span></div></div></div>
       <div class="list-row"><div class="row-icon">🛤️</div><div class="row-content"><div class="row-title">שוק לילה Raohe (饒河夜市)</div><div class="row-caption">לאורך הנהר</div><div class="row-body">מסודר ונגיש, ידוע בPork Pepper Buns של Fuzhou</div><div class="row-meta"><span class="chip chip-area">📍 Songshan</span></div></div></div>
@@ -1393,7 +1393,7 @@
   <!-- ATTRACTIONS ──────────────────────── -->
   <div class="tab-panel" id="tab-attractions">
     <div class="sh"><div class="sh-eyebrow">אטרקציות</div><div class="sh-title">מה לראות ולעשות</div><div class="sh-desc">מוזיאונים, מגדלים, טבע ותרבות</div></div>
-    <div class="list-group">
+    <div class="list-group" id="attractions-list">
       <div class="list-row"><div class="row-icon">🏙️</div><div class="row-content"><div class="row-title">Taipei 101</div><div class="row-caption">מגדל אייקוני · Xinyi</div><div class="row-body">פעם הגבוה בעולם – תצפית ב-89 עם נוף 360° על העיר</div><div class="row-meta"><span class="chip chip-area">📍 Xinyi</span></div></div></div>
       <div class="list-row"><div class="row-icon">🏯</div><div class="row-content"><div class="row-title">מוזיאון הארמון הלאומי (故宮博物院)</div><div class="row-caption">מהמוזיאונים הגדולים בעולם</div><div class="row-body">700,000 יצירות אמנות סיניות – "כרוב ירקן" ו"בשר חזיר ירקן"</div><div class="row-meta"><span class="chip chip-area">📍 Shilin</span></div></div></div>
       <div class="list-row"><div class="row-icon">⛪</div><div class="row-content"><div class="row-title">מקדש לונגשאן (龍山寺)</div><div class="row-caption">מקדש בודהיסטי מ-1738</div><div class="row-body">המקדש המרשים ביותר בטאיפיי – תפילות, קטורת ועיצוב מסורתי</div><div class="row-meta"><span class="chip chip-area">📍 Wanhua</span></div></div></div>
@@ -1674,8 +1674,15 @@ const TAB_LABEL = {
 
 const CAT_TO_TAB = {
   'מסעדה':'rest', 'קפה ותה':'cafes', 'אוכל רחוב':'food',
-  'אזור':'areas', 'טבע':'places', 'אטרקציה':'places', 'שוק לילה':'places'
+  'אזור':'areas', 'טבע':'places', 'אטרקציה':'attractions', 'שוק לילה':'places'
 };
+const CAT_TO_LIST = {
+  rest:'rest-list', cafes:'cafes-list', food:'places-list',
+  areas:'places-list', places:'places-list', attractions:'attractions-list'
+};
+
+// Store AI-generated data to use later on submit
+let _aiData = null;
 
 async function autoFill() {
   const name = document.getElementById('fp-name').value.trim();
@@ -1691,23 +1698,22 @@ async function autoFill() {
   txt.textContent  = 'AI חושב...';
 
   try {
-    const res  = await fetch('/api/add-place', {
+    const res = await fetch('/api/autofill', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, city })
     });
     if (!res.ok) throw new Error(await res.text());
     const p = await res.json();
+    _aiData = p;
 
-    // Fill the form
-    if (p.caption)  document.getElementById('fp-caption').value = p.caption;
-    if (p.description) document.getElementById('fp-desc').value = p.description;
-    if (p.tips)     document.getElementById('fp-tip').value    = p.tips;
-    if (p.address)  document.getElementById('fp-addr').value   = p.address;
-    if (p.michelin) document.getElementById('fp-michelin').checked = true;
-    if (p.top10)    document.getElementById('fp-top10').checked    = true;
-
-    // Map category
+    // Fill the form fields
+    if (p.caption)     document.getElementById('fp-caption').value = p.caption;
+    if (p.description) document.getElementById('fp-desc').value    = p.description;
+    if (p.tips)        document.getElementById('fp-tip').value     = p.tips;
+    if (p.address)     document.getElementById('fp-addr').value    = p.address;
+    if (p.michelin)    document.getElementById('fp-michelin').checked = true;
+    if (p.top10)       document.getElementById('fp-top10').checked    = true;
     const catVal = CAT_TO_TAB[p.category] || 'places';
     document.getElementById('fp-cat').value = catVal;
 
@@ -1725,13 +1731,13 @@ async function autoFill() {
 
 function submitPlace(e) {
   e.preventDefault();
-  const city    = document.getElementById('fp-city').value;
-  const cat     = document.getElementById('fp-cat').value;
-  const name    = document.getElementById('fp-name').value.trim();
-  const caption = document.getElementById('fp-caption').value.trim();
-  const desc    = document.getElementById('fp-desc').value.trim();
-  const tip     = document.getElementById('fp-tip').value.trim();
-  const addr    = document.getElementById('fp-addr').value.trim();
+  const city     = document.getElementById('fp-city').value;
+  const cat      = document.getElementById('fp-cat').value || 'places';
+  const name     = document.getElementById('fp-name').value.trim();
+  const caption  = document.getElementById('fp-caption').value.trim();
+  const desc     = document.getElementById('fp-desc').value.trim();
+  const tip      = document.getElementById('fp-tip').value.trim();
+  const addr     = document.getElementById('fp-addr').value.trim();
   const michelin  = document.getElementById('fp-michelin').checked;
   const top10     = document.getElementById('fp-top10').checked;
   const plate2nd  = document.getElementById('fp-2ndplate').checked;
@@ -1761,12 +1767,8 @@ function submitPlace(e) {
     </div>`;
 
   // Inject into the correct tab list
-  const listId = cat === 'rest' ? 'rest-list'
-               : cat === 'cafes' ? 'cafes-list'
-               : cat === 'food' ? 'food-list'
-               : cat === 'areas' ? 'areas-list'
-               : 'places-list';
-  const listEl = document.getElementById(listId) || document.getElementById('places-list');
+  const listId = CAT_TO_LIST[cat] || 'places-list';
+  const listEl = document.getElementById(listId);
   if (listEl) listEl.appendChild(row);
 
   // Apply current city filter to new row
@@ -1779,11 +1781,20 @@ function submitPlace(e) {
   stored.push({ city, cat, name, caption, desc, tip, addr, michelin, top10, plate2nd, budget });
   localStorage.setItem('tw_places', JSON.stringify(stored));
 
+  // Save to Notion (async, don't block UI)
+  fetch('/api/add-place', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, city, caption, desc, tip, addr, michelin, top10, cat })
+  }).catch(err => console.warn('Notion sync failed:', err));
+
   // Switch to the correct tab to show the new item
-  const targetBtn = document.querySelector(`.tab-btn[data-tab="${cat === 'rest' ? 'restaurants' : cat}"]`);
+  const tabKey = cat === 'rest' ? 'restaurants' : cat;
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabKey}"]`);
   if (targetBtn) targetBtn.click();
 
   closeModal();
+  _aiData = null;
 }
 
 /* SEARCH */
